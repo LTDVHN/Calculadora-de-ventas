@@ -373,73 +373,73 @@
     font-weight:500;
   }
   .hist-item .hist-summary{
-    margin-top:10px;
-    display:grid;
-    grid-template-columns:1fr auto auto auto auto auto auto auto;
-    column-gap:6px;
-    row-gap:6px;
+    margin-top:8px;
+    display:flex;
+    flex-direction:column;
     font-family:'JetBrains Mono', monospace;
     font-size:12px;
+    min-width:0;
+  }
+  .hist-item .hist-summary .hs-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    min-width:0;
+    padding:4px 0;
+    line-height:1.15;
+  }
+  .hist-item .hist-summary .hs-row + .hs-row{
+    border-top:1px dashed var(--line);
   }
   .hist-item .hist-summary .hs-label{
     color:var(--ink-soft);
     font-weight:500;
-    align-self:center;
-  }
-  .hist-item .hist-summary .hs-original-currency{
-    color:var(--ink-faint);
-    font-weight:500;
-    font-size:11px;
-    align-self:center;
-    text-align:left;
-    text-decoration:line-through;
-  }
-  .hist-item .hist-summary .hs-original-number{
-    color:var(--ink-faint);
-    font-weight:500;
-    font-size:11px;
-    align-self:center;
-    text-align:right;
-    text-decoration:line-through;
-    min-width:9ch;
-  }
-  .hist-item .hist-summary .hs-ahorro-txt{
-    color:var(--accent-deep);
-    font-weight:700;
-    font-size:10.5px;
-    align-self:center;
+    flex:0 1 auto;
     white-space:nowrap;
   }
-  .hist-item .hist-summary .hs-ahorro-currency{
+  .hist-item .hist-summary .hs-priceblock{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:0;
+    min-width:0;
+    flex:0 1 auto;
+  }
+  .hist-item .hist-summary .hs-sub{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    min-width:0;
+    max-width:100%;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    line-height:1.1;
+    font-size:10px;
+  }
+  .hist-item .hist-summary .hs-sub-empty{
+    visibility:hidden;
+  }
+  .hist-item .hist-summary .hs-original{
+    color:var(--ink-faint);
+    font-weight:500;
+    font-size:10px;
+    text-decoration:line-through;
+    white-space:nowrap;
+  }
+  .hist-item .hist-summary .hs-ahorro{
     color:var(--accent-deep);
     font-weight:700;
-    font-size:10.5px;
-    align-self:center;
-    text-align:left;
+    font-size:10px;
+    white-space:nowrap;
   }
-  .hist-item .hist-summary .hs-ahorro-number{
-    color:var(--accent-deep);
+  .hist-item .hist-summary .hs-main{
     font-weight:700;
-    font-size:10.5px;
-    align-self:center;
-    text-align:right;
-    min-width:11ch;
-  }
-  .hist-item .hist-summary .hs-currency{
     color:var(--ink);
-    font-weight:700;
-    align-self:center;
-    text-align:left;
+    white-space:nowrap;
+    line-height:1.15;
   }
-  .hist-item .hist-summary .hs-number{
-    color:var(--ink);
-    font-weight:700;
-    text-align:right;
-    align-self:center;
-    min-width:11ch;
-  }
-  .hist-item .hist-summary .hs-currency.bad,
-  .hist-item .hist-summary .hs-number.bad{ color:var(--bad); }
+  .hist-item .hist-summary .hs-main.bad{ color:var(--bad); }
   .hist-item .hist-actions{
     margin-top:10px;
     display:flex;
@@ -523,6 +523,13 @@
   @media (max-width:380px){
     input[type="number"]{ width:100px; }
     input[type="text"]{ width:140px; }
+    .hist-item .hist-summary{ font-size:11px; }
+    .hist-item .hist-summary .hs-label{ font-size:11px; }
+    .hist-item .hist-summary .hs-main{ font-size:11.5px; }
+    .hist-item .hist-summary .hs-original,
+    .hist-item .hist-summary .hs-ahorro{ font-size:9.5px; }
+    .hist-item .hist-actions{ flex-wrap:wrap; }
+    .hist-item .hist-actions button{ flex:1 1 auto; padding:6px 8px; font-size:11px; }
   }
 </style>
 </head>
@@ -859,13 +866,19 @@
       const lineas = tiers.map(t => {
         const label = t.qty === 1 ? '1 pieza' : t.qty + ' piezas';
         const bad = t.gananciaUnit < 0;
-        const ahorroHtml = t.ahorroTotal > 0
-          ? `<div class="hs-ahorro-txt">ahorrás</div><div class="hs-ahorro-currency">L</div><div class="hs-ahorro-number">${moneyNum(t.ahorroTotal)}</div>`
-          : '<div></div><div></div><div></div>';
-        const originalHtml = t.ahorroTotal > 0
-          ? `<div class="hs-original-currency">L</div><div class="hs-original-number">${moneyNum(t.precioTotal + t.ahorroTotal)}</div>`
-          : '<div></div><div></div>';
-        return `<div class="hs-label">${label}</div>${ahorroHtml}${originalHtml}<div class="hs-currency ${bad ? 'bad' : ''}">L</div><div class="hs-number ${bad ? 'bad' : ''}">${moneyNum(t.precioTotal)}${bad ? ' ⚠' : ''}</div>`;
+        const subHtml = t.ahorroTotal > 0
+          ? `<div class="hs-sub">
+               <span class="hs-original">L ${moneyNum(t.precioTotal + t.ahorroTotal)}</span>
+               <span class="hs-ahorro">ahorrás L ${moneyNum(t.ahorroTotal)}</span>
+             </div>`
+          : `<div class="hs-sub hs-sub-empty">&nbsp;</div>`;
+        return `<div class="hs-row">
+                   <div class="hs-label">${label}</div>
+                   <div class="hs-priceblock">
+                     ${subHtml}
+                     <div class="hs-main ${bad ? 'bad' : ''}">L ${moneyNum(t.precioTotal)}${bad ? ' ⚠' : ''}</div>
+                   </div>
+                 </div>`;
       }).join('');
       html += `
         <div class="hist-item">
@@ -985,7 +998,7 @@
       if(t.desc > 0){
         ctx.fillStyle = '#a8722f';
         ctx.font = '600 13px "JetBrains Mono", monospace';
-        ctx.fillText(`descuento por volumen −${t.desc}%`, 32, y + 64);
+        ctx.fillText('descuento por volumen', 32, y + 64);
       } else {
         ctx.fillStyle = '#a89f8c';
         ctx.font = '500 13px "JetBrains Mono", monospace';
